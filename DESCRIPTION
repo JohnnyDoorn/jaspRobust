@@ -1,19 +1,23 @@
-Package: jaspModule
+Package: jaspRobust
 Type: Package
-Title: A module for JASP
+Title: A Robust module for JASP
 Version: 0.1.0
 Date: 2020-10-15
 Author: JASP Team
 Website: jasp-stats.org
 Maintainer: JASP Team <info@jasp-stats.org>
-Description: This module offers analyses.
+Description: This module offers robust analyses.
 License: GPL (>= 2)
 Encoding: UTF-8
 Imports:
   jaspBase,
-  jaspGraphs
+  jaspGraphs,
+  jaspAnova,
+  WRS2
 Suggests:
   testthat
 Remotes:
   jasp-stats/jaspBase,
-  jasp-stats/jaspGraphs
+  jasp-stats/jaspGraphs,
+  jasp-stats/jaspAnova
+
