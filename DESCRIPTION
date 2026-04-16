@@ -6,7 +6,7 @@ Date: 2026-02-27
 Author: JASP Team
 Website: jasp-stats.org
 Maintainer: JASP Team <info@jasp-stats.org>
-Description: Robust statistical analyses including robust ANOVA, ANCOVA, repeated measures, and linear regression
+Description: Robust statistical analyses including robust ANOVA, ANCOVA, repeated measures, linear regression, and correlation
 License: GPL (>= 2)
 Encoding: UTF-8
 Imports:
@@ -14,6 +14,7 @@ Imports:
   car,
   ggplot2,
   jaspBase,
+  jaspDescriptives,
   jaspGraphs,
   jaspTTests,
   lmtest,
@@ -23,5 +24,6 @@ Imports:
   WRS2
 Remotes:
   jasp-stats/jaspBase,
+  jasp-stats/jaspDescriptives,
   jasp-stats/jaspGraphs,
   jasp-stats/jaspTTests

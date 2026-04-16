@@ -24,7 +24,7 @@ import "./common/classical" as Classical
 
 Form
 {
-	info: qsTr("Robust ANCOVA compares trimmed means of two groups while adjusting for a covariate, using a nonparametric running interval smoother. No parametric assumptions about homogeneity of regression slopes or equal variances are required.") + "\n" +
+	info: qsTr("Robust ANCOVA compares trimmed means of exactly two groups while adjusting for a covariate, using a nonparametric running interval smoother. No parametric assumptions about homogeneity of regression slopes or equal variances are required. Without a covariate, a robust one-way ANOVA is performed instead.") + "\n" +
 	"## " + qsTr("Assumptions") + "\n" +
 	"- " + qsTr("The independent variable is categorical with exactly two levels.") + "\n" +
 	"- " + qsTr("The dependent variable and covariate are continuous.") + "\n" +
@@ -39,8 +39,8 @@ Form
 		preferredHeight:	400 * preferencesModel.uiScale
 		AvailableVariablesList	{ name: "allVariablesList" }
 		AssignedVariablesList	{ name: "dependent";		title: qsTr("Dependent Variable");	info: qsTr("The continuous outcome variable.");	allowedColumns: ["scale"];	singleVariable: true	}
-		AssignedVariablesList	{ name: "fixedFactors";	title: qsTr("Fixed Factor");			info: qsTr("A categorical grouping variable with exactly two levels.");	allowedColumns: ["nominal"];	singleVariable: true;	minLevels: 2	}
-		AssignedVariablesList	{ name: "covariates";		title: qsTr("Covariate");			info: qsTr("A continuous covariate to adjust for.");	allowedColumns: ["scale"];	singleVariable: true;	minNumericLevels: 2	}
+		AssignedVariablesList	{ name: "fixedFactors";	title: qsTr("Fixed Factor");			info: qsTr("A categorical grouping variable with exactly two levels.");	allowedColumns: ["nominal"];	singleVariable: true;	minLevels: 2;	maxLevels: 2	}
+		AssignedVariablesList	{ name: "covariates";		title: qsTr("Covariate");			info: qsTr("An optional continuous covariate to adjust for.");	allowedColumns: ["scale"];	singleVariable: true;	minNumericLevels: 2	}
 	}
 
 	Common.RobustOptions

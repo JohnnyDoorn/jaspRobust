@@ -25,10 +25,16 @@
 AnovaRepeatedMeasuresInternal <- function(jaspResults, dataset, options) {
   ready <- all(options$repeatedMeasuresCells != "")
 
+
+  cat(
+      "\ndataset colnames:", paste(names(dataset), collapse = ", "),
+      "\n=== END DEBUG ===\n\n")
+
+
   # Convert wide to long format
-  longData <- .rmRobustReadData(dataset, options)
+  longData <- .rmRobustReadData(dataset, options, ready)
   if (isTryError(longData))
-    .quitAnalysis(gettext("Error while loading data. Please verify your repeated measures observations."))
+    .quitAnalysis(gettextf("Error while loading data: %s", .extractErrorMessage(longData)))
 
   .rmRobustCheckErrors(longData, dataset, options, ready)
 
@@ -43,16 +49,29 @@ AnovaRepeatedMeasuresInternal <- function(jaspResults, dataset, options) {
   .rmRobustRainCloudPlots(jaspResults, longData, options, ready)
 }
 
+# Entry point for JASP (func: "AnovaRepeatedMeasuresRobust" in Description.qml)
+AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
+
 
 # ---- Wide to Long conversion ----
 
-.rmRobustReadData <- function(dataset, options) {
-  if (any(options$repeatedMeasuresCells == ""))
+.rmRobustReadData <- function(dataset, options, ready) {
+  if (!ready)
     return(dataset)
 
-  rm.vars    <- options$repeatedMeasuresCells
-  bs.factors <- options$betweenSubjectFactors
+  rm.vars    <- unlist(options$repeatedMeasuresCells)
+  bs.factors <- unlist(options$betweenSubjectFactors)
+  bs.factors <- bs.factors[nzchar(bs.factors)]
   rm.factors <- options$repeatedMeasuresFactors
+
+  keys <- "repeatedMeasuresCells"
+  if (length(bs.factors) > 0)
+    keys <- c(keys, "betweenSubjectFactors")
+
+  dataset <- readDataSetByVariableTypes(options, keys = keys,
+                                        exclude.na.listwise = c(rm.vars, bs.factors))
+
+
 
   longData <- try(
     .shortToLong(dataset, rm.factors, rm.vars, bs.factors,
@@ -68,18 +87,6 @@ AnovaRepeatedMeasuresInternal <- function(jaspResults, dataset, options) {
 
 .rmRobustCheckErrors <- function(longData, dataset, options, ready) {
   if (!ready) return()
-
-  if (length(options$betweenSubjectFactors) > 0) {
-    .hasErrors(
-      dataset              = dataset,
-      type                 = c("observations", "variance", "infinity", "factorLevels"),
-      all.target           = options$repeatedMeasuresCells,
-      all.grouping         = options$betweenSubjectFactors,
-      observations.amount  = "< 2",
-      factorLevels.amount  = "< 2",
-      exitAnalysisIfErrors = TRUE
-    )
-  }
 
   nRMFactors <- length(options$repeatedMeasuresFactors)
   nBSFactors <- length(options$betweenSubjectFactors)

@@ -17,9 +17,9 @@
 
 # This is a generated file. Don't change it!
 
-#' Regression Linear
+#' RegressionLinearRobust
 #'
-RegressionLinear <- function(
+RegressionLinearRobust <- function(
           data = NULL,
           version = "0.19",
           formula = NULL,
@@ -78,7 +78,7 @@ RegressionLinear <- function(
           marginalPlotPredictionInterval = FALSE,
           marginalPlotPredictionIntervalLevel = 0.95) {
 
-   defaultArgCalls <- formals(jaspRob::RegressionLinear)
+   defaultArgCalls <- formals(jaspRob::RegressionLinearRobust)
    defaultArgs <- lapply(defaultArgCalls, eval)
    options <- as.list(match.call())[-1L]
    options <- lapply(options, eval)
@@ -102,5 +102,5 @@ RegressionLinear <- function(
       if ((name %in% optionsWithFormula) && inherits(options[[name]], "formula")) options[[name]] = jaspBase::jaspFormula(options[[name]], data)
    }
 
-   return(jaspBase::runWrappedAnalysis("jaspRob", "RegressionLinear", "RegressionLinear.qml", options, version, FALSE))
+   return(jaspBase::runWrappedAnalysis("jaspRob", "RegressionLinearRobust", "RegressionLinearRobust.qml", options, version, FALSE))
 }

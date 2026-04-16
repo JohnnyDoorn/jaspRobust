@@ -20,9 +20,8 @@ import QtQuick
 import JASP
 import JASP.Controls
 
-Section
+Group
 {
-	title: qsTr("Robust Method")
 	property bool enableMedians: true
 
 	info: qsTr("Specify the robust estimation method and its parameters. All methods are based on the WRS2 package.") + "\n" +

@@ -22,11 +22,11 @@
                         "robustMethod", "trimProportion", "bootstrapSamples")
 
 AncovaInternal <- function(jaspResults, dataset, options) {
-  hasCovariates <- length(options$covariates) > 0
+  covariates <- unlist(options$covariates)
+  hasCovariates <- length(covariates) > 0 && any(nzchar(covariates))
 
-  ready <- options$dependent != "" && length(options$fixedFactors) > 0
-  if (hasCovariates)
-    ready <- ready && length(options$covariates) > 0
+  factors <- unlist(options$fixedFactors)
+  ready <- options$dependent != "" && length(factors) > 0 && any(nzchar(factors))
 
   dataset <- droplevels(dataset)
 
@@ -46,6 +46,9 @@ AncovaInternal <- function(jaspResults, dataset, options) {
   .ancovaRobustRainCloudPlots(jaspResults, dataset, options, ready)
 }
 
+# Entry point for JASP (func: "AncovaRobust" in Description.qml)
+AncovaRobustInternal <- AncovaInternal
+
 
 # ---- Error checking ----
 
@@ -53,34 +56,22 @@ AncovaInternal <- function(jaspResults, dataset, options) {
   if (!ready) return()
 
   numericVariables <- c(options$dependent, unlist(options$covariates))
-  factorVariables  <- unlist(options$fixedFactors)
 
   .hasErrors(
     dataset              = dataset,
-    type                 = c("infinity", "observations", "variance", "factorLevels"),
+    type                 = "infinity",
     infinity.target      = numericVariables,
-    variance.target      = numericVariables,
-    observations.target  = numericVariables,
-    observations.amount  = "< 3",
-    factorLevels.target  = factorVariables,
-    factorLevels.amount  = "< 2",
     exitAnalysisIfErrors = TRUE
   )
 
   if (hasCovariates) {
-    factor  <- factorVariables[1]
+    factor  <- unlist(options$fixedFactors)[1]
     nLevels <- nlevels(dataset[[factor]])
     if (nLevels != 2)
       .quitAnalysis(gettextf(
         "Robust ANCOVA requires a factor with exactly 2 levels, but '%1$s' has %2$d levels.",
         factor, nLevels
       ))
-
-    if (length(options$fixedFactors) > 1)
-      .quitAnalysis(gettext("Robust ANCOVA currently supports only one fixed factor."))
-
-    if (length(options$covariates) > 1)
-      .quitAnalysis(gettext("Robust ANCOVA currently supports only one covariate."))
   }
 }
 
@@ -251,9 +242,14 @@ AncovaInternal <- function(jaspResults, dataset, options) {
 
   if (method %in% c("trimmedMeans", "trimmedMeansBootstrap") && nFactors == 1) {
     anovaTable$addColumnInfo(name = "test", title = gettext("Test Statistic"), type = "number")
-    anovaTable$addColumnInfo(name = "df1",  title = gettext("df1"),            type = "number")
-    anovaTable$addColumnInfo(name = "df2",  title = gettext("df2"),            type = "number")
+    if (method == "trimmedMeans") {
+      anovaTable$addColumnInfo(name = "df1",  title = gettext("df1"),            type = "number")
+      anovaTable$addColumnInfo(name = "df2",  title = gettext("df2"),            type = "number")
+    }
     anovaTable$addColumnInfo(name = "p",    title = gettext("p"),              type = "pvalue")
+    anovaTable$addColumnInfo(name = "effsize", title = gettext("\u03BE"),      type = "number")
+    if (method == "trimmedMeansBootstrap")
+      anovaTable$addColumnInfo(name = "varExplained", title = gettext("Var. Explained"), type = "number")
 
   } else if (nFactors >= 2) {
     anovaTable$addColumnInfo(name = "effect", title = gettext("Effect"),         type = "string")
@@ -273,16 +269,20 @@ AncovaInternal <- function(jaspResults, dataset, options) {
   res <- results$result
 
   if (method == "trimmedMeans" && nFactors == 1) {
-    anovaTable$addRows(list(test = res$test, df1 = res$df1, df2 = res$df2, p = res$p.value))
+    anovaTable$addRows(list(test = res$test, df1 = res$df1, df2 = res$df2, p = res$p.value,
+                           effsize = res$effsize))
     anovaTable$addFootnote(gettextf("Heteroscedastic one-way ANOVA for trimmed means (%.0f%% trimming).",
                                      options$trimProportion * 100))
+    anovaTable$addFootnote(gettext("\u03BE denotes the explanatory measure of effect size."))
 
   } else if (method == "trimmedMeansBootstrap" && nFactors == 1) {
-    anovaTable$addRows(list(test = res$test, df1 = res$df1, df2 = res$df2, p = res$p.value))
+    anovaTable$addRows(list(test = res$test, p = res$p.value,
+                           effsize = res$Effect.Size, varExplained = res$Var.Explained))
     anovaTable$addFootnote(gettextf(
       "Percentile t-bootstrap one-way ANOVA for trimmed means (%.0f%% trimming, %d bootstrap samples).",
       options$trimProportion * 100, options$bootstrapSamples
     ))
+    anovaTable$addFootnote(gettext("\u03BE denotes the explanatory measure of effect size."))
 
   } else if (method == "medians" && nFactors == 1) {
     anovaTable$addRows(list(test = res$test, critVal = res$crit.val, p = res$p.value))
@@ -351,9 +351,6 @@ AncovaInternal <- function(jaspResults, dataset, options) {
     postHocTable$addColumnInfo(name = "contrast_A", title = " ",                  type = "string", combine = TRUE)
     postHocTable$addColumnInfo(name = "contrast_B", title = " ",                  type = "string")
     postHocTable$addColumnInfo(name = "estimate",   title = gettext("Difference"), type = "number")
-
-    if (method != "trimmedMeansBootstrap")
-      postHocTable$addColumnInfo(name = "se", title = gettext("SE"), type = "number")
 
     if (isTRUE(options$postHocCi)) {
       ciLevel <- options$postHocCiLevel
@@ -446,7 +443,7 @@ AncovaInternal <- function(jaspResults, dataset, options) {
       }
 
     } else if (method == "medians") {
-      postHocTable$addFootnote(gettext("Post hoc comparisons are not available for the medians method."))
+      postHocTable$setError(gettext("Post hoc comparisons are not available for the medians method."))
     }
   }
 }
@@ -481,12 +478,42 @@ AncovaInternal <- function(jaspResults, dataset, options) {
   separatePlot   <- if (options$descriptivePlotSeparatePlot != "")  options$descriptivePlotSeparatePlot  else NULL
 
   dependent <- options$dependent
+  plotErrorBars <- isTRUE(options$descriptivePlotErrorBar)
+  ciLevel       <- options$descriptivePlotCiLevel
+
+  # covariate on horizontal axis -> scatterplot (like regular ANCOVA)
+  if (horizontalAxis %in% unlist(options$covariates)) {
+
+    scatterOpts <- options
+    scatterOpts[["colorPalette"]]                     <- "colorblind3"
+    scatterOpts[["scatterPlotLegend"]]                <- TRUE
+    scatterOpts[["scatterPlotRegressionLine"]]        <- TRUE
+    scatterOpts[["scatterPlotRegressionLineCi"]]      <- plotErrorBars
+    scatterOpts[["scatterPlotRegressionLineType"]]    <- "linear"
+    scatterOpts[["scatterPlotGraphTypeAbove"]]        <- "none"
+    scatterOpts[["scatterPlotGraphTypeRight"]]        <- "none"
+    scatterOpts[["scatterPlotRegressionLineCiLevel"]] <- ciLevel
+
+    if (!is.null(separatePlot) && separatePlot != "") {
+      for (thisLevel in levels(dataset[[separatePlot]])) {
+        subData <- dataset[dataset[[separatePlot]] == thisLevel, ]
+        thisPlotName <- paste0(horizontalAxis, " - ", dependent, ": ", separatePlot, " = ", thisLevel)
+        jaspDescriptives::.descriptivesScatterPlots(plotContainer, subData, c(horizontalAxis, dependent),
+                                                    split = separateLines, options = scatterOpts, name = thisPlotName,
+                                                    dependOnVariables = FALSE)
+      }
+    } else {
+      jaspDescriptives::.descriptivesScatterPlots(plotContainer, dataset, c(horizontalAxis, dependent),
+                                                  split = separateLines, options = scatterOpts, dependOnVariables = FALSE)
+    }
+
+    return()
+  }
+
+  # factor on horizontal axis -> grouped means plot
   groupVars <- c(horizontalAxis, separateLines, separatePlot)
   groupVars <- groupVars[!is.null(groupVars)]
-
-  plotErrorBars <- isTRUE(options$descriptivePlotErrorBar)
   errorBarType  <- options$descriptivePlotErrorBarType
-  ciLevel       <- options$descriptivePlotCiLevel
 
   summaryStat <- jaspTTests::.summarySE(as.data.frame(dataset), measurevar = dependent,
                                         groupvars = groupVars, conf.interval = ciLevel,

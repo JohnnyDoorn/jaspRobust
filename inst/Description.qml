@@ -15,8 +15,9 @@ Description
 		icon:	"analysis-classical-anova.svg"
 	}
 
-	Analysis { title: qsTr("Robust ANOVA");					func:	"Anova"					}
-	Analysis { title: qsTr("Robust Repeated Measures ANOVA");	func:	"AnovaRepeatedMeasures"	}
-	Analysis { title: qsTr("Robust ANCOVA");					func:	"Ancova"				}
-	Analysis { title: qsTr("Robust Linear Regression");		func:	"RegressionLinear"		}
+	Analysis { title: qsTr("Robust ANOVA");					func:	"AnovaRobust"				}
+	Analysis { title: qsTr("Robust Repeated Measures ANOVA");	func:	"AnovaRepeatedMeasuresRobust"	}
+	Analysis { title: qsTr("Robust ANCOVA");					func:	"AncovaRobust"				}
+	Analysis { title: qsTr("Robust Linear Regression");		func:	"RegressionLinearRobust"			}
+	Analysis { title: qsTr("Robust Correlation");			func:	"CorrelationRobust"				}
 }

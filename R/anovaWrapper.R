@@ -17,9 +17,9 @@
 
 # This is a generated file. Don't change it!
 
-#' Anova
+#' AnovaRobust
 #'
-Anova <- function(
+AnovaRobust <- function(
           data = NULL,
           version = "0.19",
           formula = NULL,
@@ -46,7 +46,7 @@ Anova <- function(
           rainCloudYAxisLabel = "",
           wlsWeights = list(types = list(), value = "")) {
 
-   defaultArgCalls <- formals(jaspRob::Anova)
+   defaultArgCalls <- formals(jaspRob::AnovaRobust)
    defaultArgs <- lapply(defaultArgCalls, eval)
    options <- as.list(match.call())[-1L]
    options <- lapply(options, eval)
@@ -73,5 +73,5 @@ Anova <- function(
       if ((name %in% optionsWithFormula) && inherits(options[[name]], "formula")) options[[name]] = jaspBase::jaspFormula(options[[name]], data)
    }
 
-   return(jaspBase::runWrappedAnalysis("jaspRob", "Anova", "Anova.qml", options, version, FALSE))
+   return(jaspBase::runWrappedAnalysis("jaspRob", "AnovaRobust", "AnovaRobust.qml", options, version, FALSE))
 }

@@ -17,9 +17,9 @@
 
 # This is a generated file. Don't change it!
 
-#' Ancova
+#' AncovaRobust
 #'
-Ancova <- function(
+AncovaRobust <- function(
           data = NULL,
           version = "0.19",
           formula = NULL,
@@ -47,7 +47,7 @@ Ancova <- function(
           rainCloudYAxisLabel = "",
           wlsWeights = list(types = list(), value = "")) {
 
-   defaultArgCalls <- formals(jaspRob::Ancova)
+   defaultArgCalls <- formals(jaspRob::AncovaRobust)
    defaultArgs <- lapply(defaultArgCalls, eval)
    options <- as.list(match.call())[-1L]
    options <- lapply(options, eval)
@@ -75,5 +75,5 @@ Ancova <- function(
       if ((name %in% optionsWithFormula) && inherits(options[[name]], "formula")) options[[name]] = jaspBase::jaspFormula(options[[name]], data)
    }
 
-   return(jaspBase::runWrappedAnalysis("jaspRob", "Ancova", "Ancova.qml", options, version, FALSE))
+   return(jaspBase::runWrappedAnalysis("jaspRob", "AncovaRobust", "AncovaRobust.qml", options, version, FALSE))
 }

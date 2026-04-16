@@ -17,9 +17,9 @@
 
 # This is a generated file. Don't change it!
 
-#' AnovaRepeatedMeasures
+#' AnovaRepeatedMeasuresRobust
 #'
-AnovaRepeatedMeasures <- function(
+AnovaRepeatedMeasuresRobust <- function(
           data = NULL,
           version = "0.19",
           formula = NULL,
@@ -48,7 +48,7 @@ AnovaRepeatedMeasures <- function(
           repeatedMeasuresFactors = list(),
           withinModelTerms = list(optionKey = "components", types = list(), value = list())) {
 
-   defaultArgCalls <- formals(jaspRob::AnovaRepeatedMeasures)
+   defaultArgCalls <- formals(jaspRob::AnovaRepeatedMeasuresRobust)
    defaultArgs <- lapply(defaultArgCalls, eval)
    options <- as.list(match.call())[-1L]
    options <- lapply(options, eval)
@@ -76,5 +76,5 @@ AnovaRepeatedMeasures <- function(
       if ((name %in% optionsWithFormula) && inherits(options[[name]], "formula")) options[[name]] = jaspBase::jaspFormula(options[[name]], data)
    }
 
-   return(jaspBase::runWrappedAnalysis("jaspRob", "AnovaRepeatedMeasures", "AnovaRepeatedMeasures.qml", options, version, FALSE))
+   return(jaspBase::runWrappedAnalysis("jaspRob", "AnovaRepeatedMeasuresRobust", "AnovaRepeatedMeasuresRobust.qml", options, version, FALSE))
 }

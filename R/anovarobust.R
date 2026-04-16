@@ -19,3 +19,6 @@
 AnovaInternal <- function(jaspResults, dataset, options) {
   AncovaInternal(jaspResults, dataset, options)
 }
+
+# Entry point for JASP (func: "AnovaRobust" in Description.qml)
+AnovaRobustInternal <- AnovaInternal

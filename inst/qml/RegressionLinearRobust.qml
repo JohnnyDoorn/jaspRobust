@@ -34,39 +34,17 @@ Form
 		AssignedVariablesList { name: "factors";	title: qsTr("Factors");				allowedColumns: ["nominal"]; minLevels: 2			}
 	}
 
-	Section
+	DropDown
 	{
-		title: qsTr("Model")
-
-		FactorsForm
-		{
-			id:					factors
-			name:				"modelTerms"
-			nested:				false
-			allowInteraction:	true
-			initNumberFactors:	1
-			baseName:			"model"
-			baseTitle:			"Model"
-			availableVariablesList.source: ["covariates", "factors"]
-			startIndex:			0
-			availableVariablesListName: "availableTerms"
-			allowedColumns:		[]
-		}
-
-		CheckBox { name: "interceptTerm"; label: qsTr("Include intercept"); checked: true }
-
-		DropDown
-		{
-			name: "estimationMethod"
-			label: qsTr("Estimation method")
-			info: qsTr("Huber downweights outliers gradually. Bisquare (Tukey) can fully reject extreme outliers. MM-estimation combines high breakdown point with high efficiency.")
-			values:
-			[
-				{ label: qsTr("M-estimation (Huber)"),		value: "huber",		recommended: true	},
-				{ label: qsTr("M-estimation (Bisquare)"),	value: "bisquare"						},
-				{ label: qsTr("MM-estimation"),				value: "mm"								}
-			]
-		}
+		name: "estimationMethod"
+		label: qsTr("Estimation method")
+		info: qsTr("Huber downweights outliers gradually. Bisquare (Tukey) can fully reject extreme outliers. MM-estimation combines high breakdown point with high efficiency.")
+		values:
+		[
+			{ label: qsTr("M-estimation (Huber)"),		value: "huber",		recommended: true	},
+			{ label: qsTr("M-estimation (Bisquare)"),	value: "bisquare"						},
+			{ label: qsTr("MM-estimation"),				value: "mm"								}
+		]
 	}
 
 	Section
