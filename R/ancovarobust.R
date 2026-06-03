@@ -38,8 +38,11 @@ AncovaInternal <- function(jaspResults, dataset, options) {
     .ancovaRobustTableAncova(jaspResults, dataset, options, results, ready)
   } else {
     .ancovaRobustTableAnova(jaspResults, dataset, options, results, ready)
+    .ancovaRobustEffectSizeTable(jaspResults, dataset, options, ready)
     .ancovaRobustPostHocTable(jaspResults, dataset, options, results, ready)
   }
+
+  .ancovaRobustDescriptivesTable(jaspResults, dataset, options, ready, hasCovariates)
 
   .ancovaRobustDescriptivesPlots(jaspResults, dataset, options, ready)
 
@@ -457,6 +460,129 @@ AncovaRobustInternal <- AncovaInternal
   if (isTRUE(options$postHocCorrectionHolm))
     corrections[["p_holm"]]       <- gettext("p<sub>Holm</sub>")
   return(corrections)
+}
+
+
+# ---- Descriptives Table ----
+
+.ancovaRobustDescriptivesTable <- function(jaspResults, dataset, options, ready, hasCovariates) {
+  if (!isTRUE(options$descriptivesTable)) return()
+  if (!is.null(jaspResults[["descriptivesTable"]])) return()
+
+  factors    <- unlist(options$fixedFactors)
+  covariates <- if (hasCovariates) unlist(options$covariates) else character(0)
+
+  table <- createJaspTable(title = gettext("Descriptives"))
+  table$dependOn(c("dependent", "fixedFactors", "covariates",
+                    "robustMethod", "trimProportion", "descriptivesTable"))
+  table$showSpecifiedColumnsOnly <- TRUE
+  table$position <- 0.5
+
+  for (f in factors)
+    table$addColumnInfo(name = f, title = f, type = "string", combine = TRUE)
+
+  if (length(covariates) > 0)
+    table$addColumnInfo(name = "variable", title = gettext("Variable"), type = "string")
+
+  .addRobustDescColumns(table)
+
+  jaspResults[["descriptivesTable"]] <- table
+
+  if (!ready) return()
+
+  dependent <- options$dependent
+  isMedian  <- isTRUE(options$robustMethod == "medians")
+  tr        <- if (isMedian) 0 else options$trimProportion
+
+  numericVars <- c(dependent, covariates)
+
+  groupKeys <- do.call(interaction, c(lapply(factors, function(f) dataset[[f]]), drop = TRUE))
+  groupLvls <- levels(groupKeys)
+
+  for (lvl in groupLvls) {
+    parts <- strsplit(lvl, ".", fixed = TRUE)[[1]]
+    base  <- as.list(setNames(parts, factors))
+    rowsForCell <- dataset[groupKeys == lvl, , drop = FALSE]
+
+    for (v in numericVars) {
+      stats <- .robustSummary(rowsForCell[[v]], tr)
+      row <- base
+      if (length(covariates) > 0) row$variable <- v
+      row$n        <- stats$n
+      row$mean     <- stats$mean
+      row$median   <- stats$median
+      row$winsorSd <- stats$winsorSd
+      row$mad      <- stats$mad
+      table$addRows(row)
+    }
+  }
+
+  .robustDescFootnote(table, tr, isMedianMethod = isMedian)
+}
+
+
+# ---- Effect Size Table ----
+
+.ancovaRobustEffectSizeTable <- function(jaspResults, dataset, options, ready) {
+  if (!isTRUE(options$effectSizeTable)) return()
+  if (!is.null(jaspResults[["effectSizeTable"]])) return()
+
+  table <- createJaspTable(title = gettext("Robust Effect Sizes"))
+  table$dependOn(c("dependent", "fixedFactors", "trimProportion", "effectSizeTable"))
+  table$showSpecifiedColumnsOnly <- TRUE
+  table$position <- 0.7
+
+  table$addColumnInfo(name = "level1",  title = " ",                     type = "string", combine = TRUE)
+  table$addColumnInfo(name = "level2",  title = " ",                     type = "string")
+  table$addColumnInfo(name = "xi",      title = gettext("ξ"),       type = "number")
+  table$addColumnInfo(name = "ciLower", title = gettext("Lower"),        type = "number", overtitle = gettext("95% CI"))
+  table$addColumnInfo(name = "ciUpper", title = gettext("Upper"),        type = "number", overtitle = gettext("95% CI"))
+
+  table$addFootnote(gettext("ξ is the Algina-Keselman-Penfield robust standardised mean difference (WRS2::akp.effect)."))
+
+  jaspResults[["effectSizeTable"]] <- table
+
+  if (!ready) return()
+
+  factors <- unlist(options$fixedFactors)
+  if (length(factors) != 1) {
+    table$setError(gettext("Robust effect sizes are only computed for one-way designs."))
+    return()
+  }
+
+  dependent <- options$dependent
+  factor    <- factors[1]
+  tr        <- options$trimProportion
+  facVals   <- factor(dataset[[factor]])
+  lvls      <- levels(facVals)
+
+  if (length(lvls) < 2) {
+    table$setError(gettext("Need at least two factor levels to compute pairwise effect sizes."))
+    return()
+  }
+
+  pairs <- utils::combn(lvls, 2, simplify = FALSE)
+  formula <- as.formula(paste0("`", dependent, "` ~ `", factor, "`"))
+
+  for (p in pairs) {
+    keep <- as.character(facVals) %in% p
+    sub  <- dataset[keep, , drop = FALSE]
+    sub[[factor]] <- factor(as.character(facVals[keep]), levels = p)
+    es  <- try(WRS2::akp.effect(formula, data = sub, tr = tr, EQVAR = FALSE), silent = TRUE)
+
+    if (isTryError(es)) {
+      table$addRows(list(level1 = p[1], level2 = p[2]))
+      next
+    }
+
+    table$addRows(list(
+      level1  = p[1],
+      level2  = p[2],
+      xi      = es$AKPeffect,
+      ciLower = if (!is.null(es$AKPci)) es$AKPci[1] else NA,
+      ciUpper = if (!is.null(es$AKPci)) es$AKPci[2] else NA
+    ))
+  }
 }
 
 

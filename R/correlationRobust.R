@@ -17,7 +17,7 @@
 
 # Robust correlation using WRS2 (percentage bend / Winsorized correlation).
 
-.correlationRobustDeps <- c("variables", "correlationMethod", "alternative")
+.correlationRobustDeps <- c("variables", "correlationMethod", "alternative", "trimProportion")
 
 CorrelationRobustInternal <- function(jaspResults, dataset, options) {
   ready <- length(options$variables) >= 2
@@ -27,6 +27,8 @@ CorrelationRobustInternal <- function(jaspResults, dataset, options) {
   corrResults <- .correlationRobustCompute(jaspResults, dataset, options, ready)
 
   .correlationRobustTable(jaspResults, dataset, options, corrResults, ready)
+
+  .correlationRobustDescriptivesTable(jaspResults, dataset, options, ready)
 
   .correlationRobustScatterPlots(jaspResults, dataset, options, ready)
 }
@@ -59,6 +61,7 @@ CorrelationRobustInternal <- function(jaspResults, dataset, options) {
   vars  <- options$variables
   pairs <- combn(vars, 2, simplify = FALSE)
   method <- options$correlationMethod
+  trim   <- options$trimProportion
 
   results <- list()
 
@@ -76,8 +79,8 @@ CorrelationRobustInternal <- function(jaspResults, dataset, options) {
     y <- y[complete]
 
     res <- try(switch(method,
-      "percentageBend" = WRS2::pbcor(x, y),
-      "winsorized"     = WRS2::wincor(x, y)
+      "percentageBend" = WRS2::pbcor(x, y, beta = trim),
+      "winsorized"     = WRS2::wincor(x, y, tr = trim)
     ), silent = TRUE)
 
     if (isTryError(res)) {
@@ -132,9 +135,11 @@ CorrelationRobustInternal <- function(jaspResults, dataset, options) {
   table$showSpecifiedColumnsOnly <- TRUE
   table$position <- 1
 
+  corColType <- if (isTRUE(options$significanceFlagged)) "string" else "number"
+
   table$addColumnInfo(name = "var1", title = "",                    type = "string")
   table$addColumnInfo(name = "var2", title = "",                    type = "string")
-  table$addColumnInfo(name = "cor",  title = gettext("r"),          type = "number")
+  table$addColumnInfo(name = "cor",  title = gettext("r"),          type = corColType)
   table$addColumnInfo(name = "stat", title = gettext("t"),          type = "number")
   table$addColumnInfo(name = "pval", title = gettext("p"),          type = "pvalue")
 
@@ -164,15 +169,16 @@ CorrelationRobustInternal <- function(jaspResults, dataset, options) {
 
     corDisplay <- r$cor
     if (isTRUE(options$significanceFlagged) && !is.na(r$pvalue)) {
-      if (r$pvalue < .001)     corDisplay <- gettextf("%s***", formatC(r$cor, format = "f", digits = 3))
-      else if (r$pvalue < .01) corDisplay <- gettextf("%s**",  formatC(r$cor, format = "f", digits = 3))
-      else if (r$pvalue < .05) corDisplay <- gettextf("%s*",   formatC(r$cor, format = "f", digits = 3))
+      if (r$pvalue < .001)      corDisplay <- gettextf("%s ***", formatC(r$cor, format = "f", digits = 3))
+      else if (r$pvalue < .01)  corDisplay <- gettextf("%s **",  formatC(r$cor, format = "f", digits = 3))
+      else if (r$pvalue < .05)  corDisplay <- gettextf("%s *",   formatC(r$cor, format = "f", digits = 3))
+      else                      corDisplay <- formatC(r$cor, format = "f", digits = 3)
     }
 
     row <- list(
       var1 = r$var1,
       var2 = r$var2,
-      cor  = r$cor,
+      cor  = corDisplay,
       stat = r$stat,
       pval = r$pvalue
     )
@@ -185,6 +191,43 @@ CorrelationRobustInternal <- function(jaspResults, dataset, options) {
 
   if (isTRUE(options$significanceFlagged))
     table$addFootnote(gettext("* p < .05, ** p < .01, *** p < .001"))
+}
+
+
+# ---- Descriptives table ----
+
+.correlationRobustDescriptivesTable <- function(jaspResults, dataset, options, ready) {
+  if (!isTRUE(options$descriptivesTable)) return()
+  if (!is.null(jaspResults[["descriptivesTable"]])) return()
+
+  table <- createJaspTable(title = gettext("Descriptives"))
+  table$dependOn(c("variables", "trimProportion", "descriptivesTable"))
+  table$showSpecifiedColumnsOnly <- TRUE
+  table$position <- 0.5
+
+  table$addColumnInfo(name = "variable", title = gettext("Variable"), type = "string")
+  .addRobustDescColumns(table)
+
+  jaspResults[["descriptivesTable"]] <- table
+
+  if (!ready) return()
+
+  vars <- options$variables
+  tr <- options$trimProportion
+
+  for (v in vars) {
+    stats <- .robustSummary(dataset[[v]], tr)
+    table$addRows(list(
+      variable = v,
+      n        = stats$n,
+      mean     = stats$mean,
+      median   = stats$median,
+      winsorSd = stats$winsorSd,
+      mad      = stats$mad
+    ))
+  }
+
+  .robustDescFootnote(table, tr)
 }
 
 

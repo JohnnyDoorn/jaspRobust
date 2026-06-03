@@ -47,6 +47,12 @@ Form
 		enableMedians: false
 	}
 
+	Group
+	{
+		title: qsTr("Additional Statistics")
+		CheckBox { name: "descriptivesTable";	label: qsTr("Descriptives");	info: qsTr("Per-cell sample size, trimmed mean, median, Winsorized standard deviation, and median absolute deviation across the within-subjects (and optional between-subjects) factor levels.") }
+	}
+
 	Classical.PostHoc
 	{
 		source: [{ name: "repeatedMeasuresFactors" }, { name: "betweenSubjectFactors" }]

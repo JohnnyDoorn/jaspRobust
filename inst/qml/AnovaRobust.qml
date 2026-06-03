@@ -45,6 +45,13 @@ Form
 		enableMedians: true
 	}
 
+	Group
+	{
+		title: qsTr("Additional Statistics")
+		CheckBox { name: "descriptivesTable";	label: qsTr("Descriptives");		info: qsTr("Per-cell sample size, trimmed (or untrimmed) mean, median, Winsorized standard deviation, and median absolute deviation.") }
+		CheckBox { name: "effectSizeTable";		label: qsTr("Robust effect sizes");	info: qsTr("Algina-Keselman-Penfield robust standardised mean differences (ξ) for each pair of factor levels. Computed via WRS2::akp.effect on a one-way design.") }
+	}
+
 	Classical.PostHoc
 	{
 		source: "fixedFactors"

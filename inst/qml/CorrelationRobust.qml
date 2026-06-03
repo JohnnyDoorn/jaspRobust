@@ -29,7 +29,7 @@ Form
 	VariablesForm
 	{
 		AvailableVariablesList { name: "allVariablesList" }
-		AssignedVariablesList  { name: "variables"; title: qsTr("Variables"); allowedColumns: ["scale"]; minNumericLevels: 2 }
+		AssignedVariablesList  { name: "variables"; title: qsTr("Variables"); info: qsTr("Two or more continuous variables. All pairwise robust correlations are reported."); allowedColumns: ["scale"]; minNumericLevels: 2 }
 	}
 
 	Group
@@ -48,16 +48,28 @@ Form
 			]
 		}
 
-		CheckBox { name: "sampleSize";			label: qsTr("Sample size");						checked: false }
-		CheckBox { name: "significanceFlagged";	label: qsTr("Flag significant correlations");	checked: false }
+		DoubleField
+		{
+			name:			"trimProportion"
+			label:			qsTr("Trimming proportion")
+			defaultValue:	0.2
+			min:			0
+			max:			0.5
+			info:			qsTr("Bending constant β for percentage bend correlation, or Winsorization proportion for the Winsorized correlation. Also used for the descriptives table. Default is 0.2.")
+		}
+
+		CheckBox { name: "sampleSize";			label: qsTr("Sample size");						info: qsTr("Display the number of complete pairwise observations used in each correlation."); checked: false }
+		CheckBox { name: "significanceFlagged";	label: qsTr("Flag significant correlations");	info: qsTr("Append asterisks to correlations whose p-value is below 0.05 (*), 0.01 (**), or 0.001 (***)."); checked: false }
+		CheckBox { name: "descriptivesTable";	label: qsTr("Descriptives");					info: qsTr("Per-variable sample size, trimmed mean, median, Winsorized standard deviation, and median absolute deviation."); checked: false }
 
 		RadioButtonGroup
 		{
 			name: "alternative"
 			title: qsTr("Alternative hypothesis")
-			RadioButton { value: "twoSided";	label: qsTr("Correlated (two-sided)");	checked: true	}
-			RadioButton { value: "greater";		label: qsTr("Positively correlated")					}
-			RadioButton { value: "less";		label: qsTr("Negatively correlated")					}
+			info: qsTr("Specify the directional hypothesis used to compute the p-value of each correlation.")
+			RadioButton { value: "twoSided";	label: qsTr("Correlated (two-sided)");	info: qsTr("Test whether the correlation differs from zero in either direction."); checked: true	}
+			RadioButton { value: "greater";		label: qsTr("Positively correlated");	info: qsTr("Test whether the correlation is greater than zero.")					}
+			RadioButton { value: "less";		label: qsTr("Negatively correlated");	info: qsTr("Test whether the correlation is less than zero.")					}
 		}
 	}
 

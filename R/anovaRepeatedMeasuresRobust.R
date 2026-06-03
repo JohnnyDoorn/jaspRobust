@@ -25,12 +25,6 @@
 AnovaRepeatedMeasuresInternal <- function(jaspResults, dataset, options) {
   ready <- all(options$repeatedMeasuresCells != "")
 
-
-  cat(
-      "\ndataset colnames:", paste(names(dataset), collapse = ", "),
-      "\n=== END DEBUG ===\n\n")
-
-
   # Convert wide to long format
   longData <- .rmRobustReadData(dataset, options, ready)
   if (isTryError(longData))
@@ -41,6 +35,8 @@ AnovaRepeatedMeasuresInternal <- function(jaspResults, dataset, options) {
   rmResults <- .rmRobustComputeResults(jaspResults, longData, dataset, options, ready)
 
   .rmRobustTableMain(jaspResults, options, rmResults, ready)
+
+  .rmRobustDescriptivesTable(jaspResults, longData, options, ready)
 
   .rmRobustPostHocTable(jaspResults, longData, options, rmResults, ready)
 
@@ -64,14 +60,14 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   bs.factors <- bs.factors[nzchar(bs.factors)]
   rm.factors <- options$repeatedMeasuresFactors
 
-  keys <- "repeatedMeasuresCells"
-  if (length(bs.factors) > 0)
-    keys <- c(keys, "betweenSubjectFactors")
-
-  dataset <- readDataSetByVariableTypes(options, keys = keys,
-                                        exclude.na.listwise = c(rm.vars, bs.factors))
-
-
+  # Workaround: preloadData currently does not pass the wide-format columns into
+  # `dataset` correctly for RM analyses, so read them ourselves. Once that bug is
+  # fixed, drop the .readDataSetToEnd call and use the `dataset` argument directly.
+  dataset <- .readDataSetToEnd(
+    columns.as.numeric  = rm.vars,
+    columns.as.factor   = bs.factors,
+    exclude.na.listwise = c(rm.vars, bs.factors)
+  )
 
   longData <- try(
     .shortToLong(dataset, rm.factors, rm.vars, bs.factors,
@@ -117,14 +113,17 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   rmFactorName <- options$repeatedMeasuresFactors[[1]]$name
 
   if (hasBetween) {
-    # Mixed design: between + within — use bwtrim / sppba+sppbb+sppbi
+    # Mixed design: between + within — use bwtrim / sppba+sppbb+sppbi.
+    # WRS2 uses non-standard evaluation for `id`, so alias the subject column to
+    # a stable name and reference it unquoted.
     bsFactor <- options$betweenSubjectFactors[[1]]
     formula  <- as.formula(paste0("`", depVar, "` ~ `", bsFactor, "` * `", rmFactorName, "`"))
+    longData$id <- longData[[subjectVar]]
 
     if (method == "trimmedMeansBootstrap") {
-      resultA  <- try(WRS2::sppba(formula, id = subjectVar, data = longData, tr = tr, nboot = nboot), silent = TRUE)
-      resultB  <- try(WRS2::sppbb(formula, id = subjectVar, data = longData, tr = tr, nboot = nboot), silent = TRUE)
-      resultAB <- try(WRS2::sppbi(formula, id = subjectVar, data = longData, tr = tr, nboot = nboot), silent = TRUE)
+      resultA  <- try(WRS2::sppba(formula, id = id, data = longData, tr = tr, nboot = nboot), silent = TRUE)
+      resultB  <- try(WRS2::sppbb(formula, id = id, data = longData, tr = tr, nboot = nboot), silent = TRUE)
+      resultAB <- try(WRS2::sppbi(formula, id = id, data = longData, tr = tr, nboot = nboot), silent = TRUE)
 
       errors <- c()
       if (isTryError(resultA))  errors <- c(errors, paste("Between-subjects:", .rmRobustExtractError(resultA)))
@@ -136,7 +135,7 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
 
       result <- list(between = resultA, within = resultB, interaction = resultAB)
     } else {
-      result <- try(WRS2::bwtrim(formula, id = subjectVar, data = longData, tr = tr), silent = TRUE)
+      result <- try(WRS2::bwtrim(formula, id = id, data = longData, tr = tr), silent = TRUE)
       if (isTryError(result))
         .quitAnalysis(gettextf("Mixed RM ANOVA failed: %s", .rmRobustExtractError(result)))
     }
@@ -260,6 +259,58 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
 }
 
 
+# ---- Descriptives table ----
+
+.rmRobustDescriptivesTable <- function(jaspResults, longData, options, ready) {
+  if (!isTRUE(options$descriptivesTable)) return()
+  if (!is.null(jaspResults[["descriptivesTable"]])) return()
+
+  rmFactorName <- if (length(options$repeatedMeasuresFactors) > 0)
+                    options$repeatedMeasuresFactors[[1]]$name else NULL
+  bsFactors    <- unlist(options$betweenSubjectFactors)
+  bsFactors    <- bsFactors[nzchar(bsFactors)]
+
+  table <- createJaspTable(title = gettext("Descriptives"))
+  table$dependOn(c("repeatedMeasuresCells", "repeatedMeasuresFactors",
+                    "betweenSubjectFactors", "trimProportion", "descriptivesTable"))
+  table$showSpecifiedColumnsOnly <- TRUE
+  table$position <- 1.5
+
+  if (!is.null(rmFactorName))
+    table$addColumnInfo(name = rmFactorName, title = rmFactorName, type = "string", combine = TRUE)
+
+  for (f in bsFactors)
+    table$addColumnInfo(name = f, title = f, type = "string", combine = TRUE)
+
+  .addRobustDescColumns(table)
+
+  jaspResults[["descriptivesTable"]] <- table
+
+  if (!ready || is.null(rmFactorName)) return()
+
+  depVar <- .rmRobustDependentName
+  tr     <- options$trimProportion
+
+  groupVars <- c(rmFactorName, bsFactors)
+  groupKeys <- do.call(interaction, c(lapply(groupVars, function(g) longData[[g]]), drop = TRUE))
+  splits    <- split(longData[[depVar]], groupKeys)
+
+  for (lvl in levels(groupKeys)) {
+    parts <- strsplit(lvl, ".", fixed = TRUE)[[1]]
+    row   <- as.list(setNames(parts, groupVars))
+    stats <- .robustSummary(splits[[lvl]], tr)
+    row$n        <- stats$n
+    row$mean     <- stats$mean
+    row$median   <- stats$median
+    row$winsorSd <- stats$winsorSd
+    row$mad      <- stats$mad
+    table$addRows(row)
+  }
+
+  .robustDescFootnote(table, tr)
+}
+
+
 # ---- Post Hoc table ----
 
 .rmRobustPostHocTable <- function(jaspResults, longData, options, rmResults, ready) {
@@ -298,6 +349,17 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
                                overtitle = gettext("95% CI"))
     postHocTable$addColumnInfo(name = "p",          title = gettext("p"),              type = "pvalue")
 
+    corrSpec <- list()
+    if (isTRUE(options$postHocCorrectionHochberg))
+      corrSpec[["p_hochberg"]]   <- list(method = "hochberg",   label = gettext("p<sub>Hochberg</sub>"))
+    if (isTRUE(options$postHocCorrectionBonferroni))
+      corrSpec[["p_bonferroni"]] <- list(method = "bonferroni", label = gettext("p<sub>Bonf</sub>"))
+    if (isTRUE(options$postHocCorrectionHolm))
+      corrSpec[["p_holm"]]       <- list(method = "holm",       label = gettext("p<sub>Holm</sub>"))
+
+    for (corrName in names(corrSpec))
+      postHocTable$addColumnInfo(name = corrName, title = corrSpec[[corrName]]$label, type = "pvalue")
+
     postHocContainer[[termName]] <- postHocTable
 
     # Post hoc only available for within-subjects factor
@@ -326,6 +388,9 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
     # rmmcp/pairdepb return a list with comp matrix: columns [Group1, Group2, psihat, ci.lower, ci.upper, p.value]
     compMatrix <- phResult$comp
     lvls <- levels(groups)
+    rawP <- compMatrix[, 6]
+
+    adjusted <- lapply(corrSpec, function(s) p.adjust(rawP, method = s$method))
 
     for (i in seq_len(nrow(compMatrix))) {
       g1 <- as.integer(compMatrix[i, 1])
@@ -338,29 +403,10 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
         ciUpper    = compMatrix[i, 5],
         p          = compMatrix[i, 6]
       )
+      for (corrName in names(adjusted))
+        row[[corrName]] <- adjusted[[corrName]][i]
       postHocTable$addRows(row)
     }
-
-    # Apply p-value corrections
-    rawP <- compMatrix[, 6]
-    .rmRobustAddCorrectedPValues(postHocTable, rawP, options)
-  }
-}
-
-
-.rmRobustAddCorrectedPValues <- function(postHocTable, rawP, options) {
-  corrections <- list()
-  if (isTRUE(options$postHocCorrectionHochberg))
-    corrections[["hochberg"]] <- list(label = gettext("p<sub>Hochberg</sub>"), values = p.adjust(rawP, method = "hochberg"))
-  if (isTRUE(options$postHocCorrectionBonferroni))
-    corrections[["bonferroni"]] <- list(label = gettext("p<sub>Bonf</sub>"), values = p.adjust(rawP, method = "bonferroni"))
-  if (isTRUE(options$postHocCorrectionHolm))
-    corrections[["holm"]] <- list(label = gettext("p<sub>Holm</sub>"), values = p.adjust(rawP, method = "holm"))
-
-  for (corrName in names(corrections)) {
-    postHocTable$addColumnInfo(name = corrName, title = corrections[[corrName]]$label, type = "pvalue")
-    for (i in seq_along(corrections[[corrName]]$values))
-      postHocTable$addRows(setNames(list(corrections[[corrName]]$values[i]), corrName), rowIndex = i)
   }
 }
 

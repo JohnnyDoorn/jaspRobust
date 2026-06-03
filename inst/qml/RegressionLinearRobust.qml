@@ -29,9 +29,9 @@ Form
 	VariablesForm
 	{
 		AvailableVariablesList { name: "allVariablesList" }
-		AssignedVariablesList { name: "dependent";	title: qsTr("Dependent Variable");	allowedColumns: ["scale"]; singleVariable: true		}
-		AssignedVariablesList { name: "covariates";	title: qsTr("Covariates");			allowedColumns: ["scale"]; minNumericLevels: 2		}
-		AssignedVariablesList { name: "factors";	title: qsTr("Factors");				allowedColumns: ["nominal"]; minLevels: 2			}
+		AssignedVariablesList { name: "dependent";	title: qsTr("Dependent Variable");	info: qsTr("The continuous outcome variable to be regressed on the predictors."); allowedColumns: ["scale"]; singleVariable: true		}
+		AssignedVariablesList { name: "covariates";	title: qsTr("Covariates");			info: qsTr("Continuous predictors entered as numeric covariates."); allowedColumns: ["scale"]; minNumericLevels: 2		}
+		AssignedVariablesList { name: "factors";	title: qsTr("Factors");				info: qsTr("Categorical predictors. Each factor is dummy coded with the first level as the reference."); allowedColumns: ["nominal"]; minLevels: 2			}
 	}
 
 	DropDown
@@ -54,12 +54,33 @@ Form
 		Group
 		{
 			title: qsTr("Coefficients")
-			CheckBox { name: "coefficientEstimate"; label: qsTr("Estimates"); checked: true }
+			CheckBox { name: "coefficientEstimate"; label: qsTr("Estimates"); info: qsTr("Display the estimated regression coefficients with standard errors, Wald t-statistics, and p-values."); checked: true }
 			CheckBox
 			{
 				name: "coefficientCi"; label: qsTr("Confidence intervals")
+				info: qsTr("Display Wald-type confidence intervals for the regression coefficients at the chosen confidence level.")
 				childrenOnSameRow: true
 				CIField { name: "coefficientCiLevel" }
+			}
+		}
+
+		Group
+		{
+			title: qsTr("Descriptives")
+			CheckBox
+			{
+				name:	"descriptivesTable"
+				label:	qsTr("Descriptives")
+				info:	qsTr("Per-variable sample size, trimmed mean, median, Winsorized standard deviation, and median absolute deviation for the dependent variable and each covariate. The trimming proportion is used only for these descriptives; the robust regression fit itself uses the chosen estimation method.")
+				DoubleField
+				{
+					name:			"descriptivesTrimProportion"
+					label:			qsTr("Trimming proportion")
+					defaultValue:	0.2
+					min:			0
+					max:			0.5
+					info:			qsTr("Trimming proportion used for the trimmed mean and Winsorized SD in the descriptives table. Default is 0.2.")
+				}
 			}
 		}
 	}
@@ -71,8 +92,8 @@ Form
 		Group
 		{
 			title: qsTr("Residual Plots")
-			CheckBox { name: "residualVsFittedPlot";	label: qsTr("Residuals vs. fitted")					}
-			CheckBox { name: "residualQqPlot";			label: qsTr("Q-Q plot of residuals")				}
+			CheckBox { name: "residualVsFittedPlot";	label: qsTr("Residuals vs. fitted");	info: qsTr("Plot residuals against fitted values with a loess smoother to inspect non-linearity or heteroscedasticity that survives the robust fit.")	}
+			CheckBox { name: "residualQqPlot";			label: qsTr("Q-Q plot of residuals");	info: qsTr("Normal quantile-quantile plot of the standardised residuals to assess the residual distribution.")	}
 		}
 
 		Group

@@ -31,6 +31,8 @@ RegressionLinearInternal <- function(jaspResults, dataset, options) {
 
   .regressionRobustModelSummaryTable(jaspResults, dataset, options, results, ready)
 
+  .regressionRobustDescriptivesTable(jaspResults, dataset, options, ready)
+
   .regressionRobustResidualPlots(jaspResults, dataset, options, results, ready)
 }
 
@@ -208,6 +210,44 @@ RegressionLinearRobustInternal <- RegressionLinearInternal
     nDownweight = sum(w < 1),
     converged   = if (isTRUE(fit$converged)) "\u2713" else "\u2717"
   ))
+}
+
+
+# ---- Descriptives table ----
+
+.regressionRobustDescriptivesTable <- function(jaspResults, dataset, options, ready) {
+  if (!isTRUE(options$descriptivesTable)) return()
+  if (!is.null(jaspResults[["descriptivesTable"]])) return()
+
+  table <- createJaspTable(title = gettext("Descriptives"))
+  table$dependOn(c("dependent", "covariates", "descriptivesTable", "descriptivesTrimProportion"))
+  table$showSpecifiedColumnsOnly <- TRUE
+  table$position <- 0.5
+
+  table$addColumnInfo(name = "variable", title = gettext("Variable"), type = "string")
+  .addRobustDescColumns(table)
+
+  jaspResults[["descriptivesTable"]] <- table
+
+  if (!ready) return()
+
+  numericVars <- c(options$dependent, unlist(options$covariates))
+  numericVars <- numericVars[nzchar(numericVars)]
+  tr <- options$descriptivesTrimProportion
+
+  for (v in numericVars) {
+    stats <- .robustSummary(dataset[[v]], tr)
+    table$addRows(list(
+      variable = v,
+      n        = stats$n,
+      mean     = stats$mean,
+      median   = stats$median,
+      winsorSd = stats$winsorSd,
+      mad      = stats$mad
+    ))
+  }
+
+  .robustDescFootnote(table, tr)
 }
 
 

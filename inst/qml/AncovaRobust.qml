@@ -48,6 +48,12 @@ Form
 		enableMedians: false
 	}
 
+	Group
+	{
+		title: qsTr("Additional Statistics")
+		CheckBox { name: "descriptivesTable";	label: qsTr("Descriptives");	info: qsTr("Per-group sample size, trimmed mean, median, Winsorized standard deviation, and median absolute deviation for the dependent variable and each covariate.") }
+	}
+
 	Classical.DescriptivePlots
 	{
 		source: ["fixedFactors", "covariates"]
