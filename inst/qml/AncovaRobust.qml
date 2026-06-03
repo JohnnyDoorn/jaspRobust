@@ -15,63 +15,52 @@
 // License along with this program.  If not, see
 // <http://www.gnu.org/licenses/>.
 //
-//
+
 import QtQuick
 import JASP
 import JASP.Controls
+import "./common" as Common
+import "./common/classical" as Classical
 
 Form
 {
-	id: form
+	info: qsTr("Robust ANCOVA compares trimmed means of exactly two groups while adjusting for a covariate, using a nonparametric running interval smoother. No parametric assumptions about homogeneity of regression slopes or equal variances are required. Without a covariate, a robust one-way ANOVA is performed instead.") + "\n" +
+	"## " + qsTr("Assumptions") + "\n" +
+	"- " + qsTr("The independent variable is categorical with exactly two levels.") + "\n" +
+	"- " + qsTr("The dependent variable and covariate are continuous.") + "\n" +
+	"- " + qsTr("The groups are independent.")
 
-	Formula
-	{
-		lhs: "dependent"
-		rhs: ["fixedFactors", "covariates"]
-		userMustSpecify: ["fixedFactors", "covariates"]
-	}
+	id: form
+	property int analysis:	Common.Type.Analysis.ANCOVA
+	property int framework:	Common.Type.Framework.Classical
 
 	VariablesForm
 	{
 		preferredHeight:	400 * preferencesModel.uiScale
 		AvailableVariablesList	{ name: "allVariablesList" }
-		AssignedVariablesList	{ name: "dependent";		title: qsTr("Dependent Variable");	allowedColumns: ["scale"]; 	 singleVariable: true		}
-		AssignedVariablesList	{ name: "fixedFactors";		title: qsTr("Fixed Factors");		allowedColumns: ["nominal"];  singleVariable: true;	 minLevels: 2; maxLevels: 2 }
-		AssignedVariablesList	{ name: "covariates";		title: qsTr("Covariates");			allowedColumns: ["scale"];    singleVariable: true;	minNumericLevels: 2    	}
+		AssignedVariablesList	{ name: "dependent";		title: qsTr("Dependent Variable");	info: qsTr("The continuous outcome variable.");	allowedColumns: ["scale"];	singleVariable: true	}
+		AssignedVariablesList	{ name: "fixedFactors";	title: qsTr("Fixed Factor");			info: qsTr("A categorical grouping variable with exactly two levels.");	allowedColumns: ["nominal"];	singleVariable: true;	minLevels: 2;	maxLevels: 2	}
+		AssignedVariablesList	{ name: "covariates";		title: qsTr("Covariate");			info: qsTr("An optional continuous covariate to adjust for.");	allowedColumns: ["scale"];	singleVariable: true;	minNumericLevels: 2	}
 	}
 
-	Section
+	Common.RobustOptions
 	{
-		property alias	source:				availableTerms.source
-		property bool	enableHorizontal:	true
-		property bool	enableYAxisLabel:	false
-		property var	allowed:			(enableYAxisLabel) ? [] : ["nominal"]
-		
-		title: qsTr("Raincloud Plots")
-
-		VariablesForm
-		{
-			preferredHeight: 150 * preferencesModel.uiScale
-			AvailableVariablesList	{ name: "rainCloudAvailableFactors";		title: qsTr("Factors"); id: availableTerms }
-			AssignedVariablesList	{ name: "rainCloudHorizontalAxis";	title: qsTr("Horizontal Axis"); singleVariable: true; allowedColumns: allowed }
-			AssignedVariablesList	{ name: "rainCloudSeparatePlots";	title: qsTr("Separate Plots");	singleVariable: true; allowedColumns: allowed }
-		}
-
-		CheckBox
-		{
-			name: "rainCloudHorizontalDisplay";
-			label: qsTr("Horizontal display");
-			visible: enableHorizontal 
-		}
-		
-		TextField
-		{
-			name: "rainCloudYAxisLabel";
-			label: qsTr("Label y-axis");
-			fieldWidth: 200;
-			visible: enableYAxisLabel
-		}
-
+		enableMedians: false
 	}
 
+	Group
+	{
+		title: qsTr("Additional Statistics")
+		CheckBox { name: "descriptivesTable";	label: qsTr("Descriptives");	info: qsTr("Per-group sample size, trimmed mean, median, Winsorized standard deviation, and median absolute deviation for the dependent variable and each covariate.") }
+	}
+
+	Classical.DescriptivePlots
+	{
+		source: ["fixedFactors", "covariates"]
+	}
+
+	Common.RainCloudPlots
+	{
+		source: ["fixedFactors"]
+	}
 }

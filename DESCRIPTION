@@ -1,23 +1,29 @@
 Package: jaspRobust
 Type: Package
-Title: A Robust module for JASP
+Title: Robust Statistics Module for JASP
 Version: 0.1.0
-Date: 2020-10-15
+Date: 2026-02-27
 Author: JASP Team
 Website: jasp-stats.org
 Maintainer: JASP Team <info@jasp-stats.org>
-Description: This module offers robust analyses.
+Description: Robust statistical analyses including robust ANOVA, ANCOVA, repeated measures, linear regression, and correlation
 License: GPL (>= 2)
 Encoding: UTF-8
 Imports:
+  boot,
+  car,
+  ggplot2,
   jaspBase,
+  jaspDescriptives,
   jaspGraphs,
-  jaspAnova,
+  jaspTTests,
+  lmtest,
+  MASS,
+  matrixStats,
+  statmod,
   WRS2
-Suggests:
-  testthat
 Remotes:
   jasp-stats/jaspBase,
+  jasp-stats/jaspDescriptives,
   jasp-stats/jaspGraphs,
-  jasp-stats/jaspAnova
-
+  jasp-stats/jaspTTests

@@ -59,3 +59,7 @@ Thumbs.db
 .Rproj.user
 
 _processedLockFile.lock
+
+.claude/
+
+.github/instructions/

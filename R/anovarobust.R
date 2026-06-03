@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2013-2018 University of Amsterdam
+# Copyright (C) 2013-2026 University of Amsterdam
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -15,11 +15,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-AnovaRobust <- function(jaspResults, dataset, options) {
-
-    options$covariates <- NULL
-
-    AncovaRobust(jaspResults, dataset, options)
-
-    return()
+# ANOVA is ANCOVA without covariates — delegate to the shared implementation.
+AnovaInternal <- function(jaspResults, dataset, options) {
+  AncovaInternal(jaspResults, dataset, options)
 }
+
+# Entry point for JASP (func: "AnovaRobust" in Description.qml)
+AnovaRobustInternal <- AnovaInternal
