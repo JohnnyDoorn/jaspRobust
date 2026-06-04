@@ -419,9 +419,9 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
     postHocTable$addColumnInfo(name = "contrast_B", title = " ",                      type = "string")
     postHocTable$addColumnInfo(name = "psihat",     title = gettext("\u0394 Trimmed Mean"), type = "number")
     postHocTable$addColumnInfo(name = "ciLower",    title = gettext("Lower"),          type = "number",
-                               overtitle = gettext("95% CI"))
+                               overtitle = gettextf("95%% CI"))
     postHocTable$addColumnInfo(name = "ciUpper",    title = gettext("Upper"),          type = "number",
-                               overtitle = gettext("95% CI"))
+                               overtitle = gettextf("95%% CI"))
     postHocTable$addColumnInfo(name = "p",          title = gettext("p"),              type = "pvalue")
 
     corrSpec <- list()

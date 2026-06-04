@@ -184,9 +184,9 @@ AncovaRobustInternal <- AncovaInternal
   ancovaTable$addColumnInfo(name = "trDiff",    title = gettext("\u0394 Trimmed Mean"),  type = "number")
   ancovaTable$addColumnInfo(name = "se",        title = gettext("SE"),              type = "number")
   ancovaTable$addColumnInfo(name = "ciLower",   title = gettext("Lower"),           type = "number",
-                             overtitle = gettext("95% CI"))
+                             overtitle = gettextf("95%% CI"))
   ancovaTable$addColumnInfo(name = "ciUpper",   title = gettext("Upper"),           type = "number",
-                             overtitle = gettext("95% CI"))
+                             overtitle = gettextf("95%% CI"))
   ancovaTable$addColumnInfo(name = "test",      title = gettext("Test Statistic"),  type = "number")
   ancovaTable$addColumnInfo(name = "p",         title = gettext("p"),               type = "pvalue")
 
@@ -535,8 +535,8 @@ AncovaRobustInternal <- AncovaInternal
   table$addColumnInfo(name = "level1",  title = " ",                     type = "string", combine = TRUE)
   table$addColumnInfo(name = "level2",  title = " ",                     type = "string")
   table$addColumnInfo(name = "xi",      title = gettext("ξ"),       type = "number")
-  table$addColumnInfo(name = "ciLower", title = gettext("Lower"),        type = "number", overtitle = gettext("95% CI"))
-  table$addColumnInfo(name = "ciUpper", title = gettext("Upper"),        type = "number", overtitle = gettext("95% CI"))
+  table$addColumnInfo(name = "ciLower", title = gettext("Lower"),        type = "number", overtitle = gettextf("95%% CI"))
+  table$addColumnInfo(name = "ciUpper", title = gettext("Upper"),        type = "number", overtitle = gettextf("95%% CI"))
 
   table$addFootnote(gettext("ξ is the Algina-Keselman-Penfield robust standardised mean difference (WRS2::akp.effect)."))
 
