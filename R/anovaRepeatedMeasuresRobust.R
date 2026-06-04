@@ -191,6 +191,16 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   vals[1]
 }
 
+# WRS2::bwtrim returns each effect's degrees of freedom as a length-2 numeric
+# vector (e.g. `A.df = c(df1, df2)`), not two separate fields. Pull both
+# elements; pad with NA if WRS2 ever returns a shorter vector.
+.rmRobustDfPair <- function(x) {
+  v <- suppressWarnings(as.numeric(unlist(x, use.names = FALSE)))
+  v <- v[!is.na(v)]
+  c(if (length(v) >= 1L) v[1] else NA_real_,
+    if (length(v) >= 2L) v[2] else NA_real_)
+}
+
 
 # ---- Main table ----
 
@@ -238,10 +248,13 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
       rmTable$addRows(.rmRobustMixedBootstrapRow(rmFactorName, res$within,      showDf))
       rmTable$addRows(.rmRobustMixedBootstrapRow(intName,      res$interaction, showDf))
     } else {
-      # bwtrim result: Qa/Qb/Qab + corresponding df.
-      rmTable$addRows(.rmRobustMixedRow(bsFactor,     res$Qa,  res$A.df1,  res$A.df2,  res$A.p.value,  showDf))
-      rmTable$addRows(.rmRobustMixedRow(rmFactorName, res$Qb,  res$B.df1,  res$B.df2,  res$B.p.value,  showDf))
-      rmTable$addRows(.rmRobustMixedRow(intName,      res$Qab, res$AB.df1, res$AB.df2, res$AB.p.value, showDf))
+      # bwtrim result: Qa/Qb/Qab + corresponding 2-vector df.
+      adf  <- .rmRobustDfPair(res$A.df)
+      bdf  <- .rmRobustDfPair(res$B.df)
+      abdf <- .rmRobustDfPair(res$AB.df)
+      rmTable$addRows(.rmRobustMixedRow(bsFactor,     res$Qa,  adf[1],  adf[2],  res$A.p.value,  showDf))
+      rmTable$addRows(.rmRobustMixedRow(rmFactorName, res$Qb,  bdf[1],  bdf[2],  res$B.p.value,  showDf))
+      rmTable$addRows(.rmRobustMixedRow(intName,      res$Qab, abdf[1], abdf[2], res$AB.p.value, showDf))
     }
   }
 
@@ -250,6 +263,17 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
       "Bootstrap with trimmed means (%.0f%% trimming, %d bootstrap samples).",
       options$trimProportion * 100, options$bootstrapSamples
     ))
+    # WRS2::rmanovab returns a critical value instead of a p-value (reject H0
+    # if test > crit at alpha = .05). Surface it so the empty p column is
+    # not the only signal of significance.
+    if (designType == "within") {
+      critVal <- .rmRobustScalar(res$crit)
+      if (!is.na(critVal))
+        rmTable$addFootnote(gettextf(
+          "Reject H₀ if the test statistic exceeds the critical value %.3f (α = .05); no p-value is reported by this bootstrap procedure.",
+          critVal
+        ))
+    }
   } else {
     rmTable$addFootnote(gettextf("Trimmed means (%.0f%% trimming).",
                                   options$trimProportion * 100))
