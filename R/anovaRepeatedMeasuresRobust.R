@@ -106,6 +106,12 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   nboot     <- options$bootstrapSamples
   hasBetween <- length(options$betweenSubjectFactors) > 0
 
+  # Median-based robust RM ANOVA has no clean WRS2 analogue. The QML hides the
+  # option, but the value can persist from a prior non-RM analysis, so guard
+  # explicitly to avoid silently falling through to trimmed-mean behaviour.
+  if (identical(method, "medians"))
+    .quitAnalysis(gettext("Median-based robust analysis is not currently supported for repeated measures designs. Please select Trimmed Means or Trimmed Means + Bootstrap."))
+
   depVar      <- .rmRobustDependentName
   subjectVar  <- .rmRobustSubjectName
 
@@ -173,6 +179,28 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   trimws(gsub("^Error.*?:\\s*", "", as.character(tryResult)))
 }
 
+# Defensive scalar extractor: handles NULL, 1xN matrices, named numerics, etc.
+# Returns NA_real_ when nothing usable is available. This prevents the
+# "[object] [object]" rendering when WRS2 hands us a structured return value
+# in a column declared as type "number".
+.rmRobustScalar <- function(x) {
+  if (is.null(x)) return(NA_real_)
+  vals <- suppressWarnings(as.numeric(unlist(x, use.names = FALSE)))
+  vals <- vals[!is.na(vals)]
+  if (length(vals) == 0L) return(NA_real_)
+  vals[1]
+}
+
+# WRS2::bwtrim returns each effect's degrees of freedom as a length-2 numeric
+# vector (e.g. `A.df = c(df1, df2)`), not two separate fields. Pull both
+# elements; pad with NA if WRS2 ever returns a shorter vector.
+.rmRobustDfPair <- function(x) {
+  v <- suppressWarnings(as.numeric(unlist(x, use.names = FALSE)))
+  v <- v[!is.na(v)]
+  c(if (length(v) >= 1L) v[1] else NA_real_,
+    if (length(v) >= 2L) v[2] else NA_real_)
+}
+
 
 # ---- Main table ----
 
@@ -183,54 +211,50 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   rmTable$dependOn(.rmRobustDeps)
   rmTable$showSpecifiedColumnsOnly <- TRUE
 
+  # df columns only meaningful for the (non-bootstrap) trimmed-means analyses.
+  # `method` is the option value here (rmResults may be NULL pre-run), so the
+  # column schema is decided up front.
+  method     <- options$robustMethod
+  showDf     <- identical(method, "trimmedMeans")
+
   rmTable$addColumnInfo(name = "effect", title = gettext("Effect"),         type = "string")
   rmTable$addColumnInfo(name = "test",   title = gettext("Test Statistic"), type = "number")
-  rmTable$addColumnInfo(name = "df1",    title = gettext("df1"),            type = "number")
-  rmTable$addColumnInfo(name = "df2",    title = gettext("df2"),            type = "number")
+  if (showDf) {
+    rmTable$addColumnInfo(name = "df1",  title = gettext("df1"),            type = "number")
+    rmTable$addColumnInfo(name = "df2",  title = gettext("df2"),            type = "number")
+  }
   rmTable$addColumnInfo(name = "p",      title = gettext("p"),              type = "pvalue")
 
   jaspResults[["rmRobustTable"]] <- rmTable
 
   if (!ready || is.null(rmResults)) return()
 
-  method     <- rmResults$method
   designType <- rmResults$designType
   res        <- rmResults$result
 
   if (designType == "within") {
     # rmanova / rmanovab: single row
     rmFactorName <- options$repeatedMeasuresFactors[[1]]$name
-    rmTable$addRows(list(
-      effect = rmFactorName,
-      test   = res$test,
-      df1    = if (!is.null(res$df1)) res$df1 else NA,
-      df2    = if (!is.null(res$df2)) res$df2 else NA,
-      p      = res$p.value
-    ))
+    rmTable$addRows(.rmRobustWithinRow(rmFactorName, res, showDf))
 
   } else if (designType == "mixed") {
     bsFactor     <- options$betweenSubjectFactors[[1]]
     rmFactorName <- options$repeatedMeasuresFactors[[1]]$name
+    intName      <- paste(bsFactor, "\u273B", rmFactorName)
 
     if (method == "trimmedMeansBootstrap") {
-      # sppba/sppbb/sppbi results
-      .rmRobustAddBootstrapMixedRow(rmTable, res$between,     bsFactor)
-      .rmRobustAddBootstrapMixedRow(rmTable, res$within,      rmFactorName)
-      .rmRobustAddBootstrapMixedRow(rmTable, res$interaction, paste(bsFactor, "\u273B", rmFactorName))
+      # sppba/sppbb/sppbi: bootstrap-derived; no df.
+      rmTable$addRows(.rmRobustMixedBootstrapRow(bsFactor,     res$between,     showDf))
+      rmTable$addRows(.rmRobustMixedBootstrapRow(rmFactorName, res$within,      showDf))
+      rmTable$addRows(.rmRobustMixedBootstrapRow(intName,      res$interaction, showDf))
     } else {
-      # bwtrim result: Qa (between), Qb (within), Qab (interaction)
-      rmTable$addRows(list(
-        effect = bsFactor,
-        test   = res$Qa, df1 = res$A.df1, df2 = res$A.df2, p = res$A.p.value
-      ))
-      rmTable$addRows(list(
-        effect = rmFactorName,
-        test   = res$Qb, df1 = res$B.df1, df2 = res$B.df2, p = res$B.p.value
-      ))
-      rmTable$addRows(list(
-        effect = paste(bsFactor, "\u273B", rmFactorName),
-        test   = res$Qab, df1 = res$AB.df1, df2 = res$AB.df2, p = res$AB.p.value
-      ))
+      # bwtrim result: Qa/Qb/Qab + corresponding 2-vector df.
+      adf  <- .rmRobustDfPair(res$A.df)
+      bdf  <- .rmRobustDfPair(res$B.df)
+      abdf <- .rmRobustDfPair(res$AB.df)
+      rmTable$addRows(.rmRobustMixedRow(bsFactor,     res$Qa,  adf[1],  adf[2],  res$A.p.value,  showDf))
+      rmTable$addRows(.rmRobustMixedRow(rmFactorName, res$Qb,  bdf[1],  bdf[2],  res$B.p.value,  showDf))
+      rmTable$addRows(.rmRobustMixedRow(intName,      res$Qab, abdf[1], abdf[2], res$AB.p.value, showDf))
     }
   }
 
@@ -239,6 +263,17 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
       "Bootstrap with trimmed means (%.0f%% trimming, %d bootstrap samples).",
       options$trimProportion * 100, options$bootstrapSamples
     ))
+    # WRS2::rmanovab returns a critical value instead of a p-value (reject H0
+    # if test > crit at alpha = .05). Surface it so the empty p column is
+    # not the only signal of significance.
+    if (designType == "within") {
+      critVal <- .rmRobustScalar(res$crit)
+      if (!is.na(critVal))
+        rmTable$addFootnote(gettextf(
+          "Reject H₀ if the test statistic exceeds the critical value %.3f (α = .05); no p-value is reported by this bootstrap procedure.",
+          critVal
+        ))
+    }
   } else {
     rmTable$addFootnote(gettextf("Trimmed means (%.0f%% trimming).",
                                   options$trimProportion * 100))
@@ -248,14 +283,52 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
 }
 
 
-.rmRobustAddBootstrapMixedRow <- function(table, res, effectName) {
-  table$addRows(list(
+# Row builders. Each defensively extracts a scalar from whatever WRS2 returns,
+# and includes df columns only when the calling table actually shows them.
+
+.rmRobustWithinRow <- function(effectName, res, showDf) {
+  row <- list(
     effect = effectName,
-    test   = if (!is.null(res$test))    res$test    else NA,
-    df1    = if (!is.null(res$df1))     res$df1     else NA,
-    df2    = if (!is.null(res$df2))     res$df2     else NA,
-    p      = if (!is.null(res$p.value)) res$p.value else NA
-  ))
+    test   = .rmRobustScalar(res$test),
+    p      = .rmRobustScalar(res$p.value)
+  )
+  if (showDf) {
+    row$df1 <- .rmRobustScalar(res$df1)
+    row$df2 <- .rmRobustScalar(res$df2)
+  }
+  row
+}
+
+.rmRobustMixedRow <- function(effectName, test, df1, df2, p, showDf) {
+  row <- list(
+    effect = effectName,
+    test   = .rmRobustScalar(test),
+    p      = .rmRobustScalar(p)
+  )
+  if (showDf) {
+    row$df1 <- .rmRobustScalar(df1)
+    row$df2 <- .rmRobustScalar(df2)
+  }
+  row
+}
+
+.rmRobustMixedBootstrapRow <- function(effectName, res, showDf) {
+  # sppba/sppbb/sppbi return objects with `p.value` and a test-statistic field
+  # whose exact name varies across releases. Pull whichever is present.
+  testStat <- if (!is.null(res$test)) res$test
+              else if (!is.null(res$psihat)) res$psihat
+              else if (!is.null(res$Q)) res$Q
+              else NA_real_
+  row <- list(
+    effect = effectName,
+    test   = .rmRobustScalar(testStat),
+    p      = .rmRobustScalar(res$p.value)
+  )
+  if (showDf) {
+    row$df1 <- NA_real_
+    row$df2 <- NA_real_
+  }
+  row
 }
 
 
@@ -333,7 +406,9 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
   rmFactorName <- options$repeatedMeasuresFactors[[1]]$name
 
   for (postHocTerm in options$postHocTerms) {
-    variables <- unlist(postHocTerm$components)
+    # postHocTerm may arrive as a list with `$components` or as a bare character vector;
+    # normalise so the rest of the block can treat it uniformly.
+    variables <- if (is.character(postHocTerm)) postHocTerm else unlist(postHocTerm$components, use.names = FALSE)
     termName  <- paste(variables, collapse = " \u273B ")
 
     myTitle <- gettextf("Post Hoc Comparisons - %s", termName)

@@ -19,15 +19,10 @@
 
 <img src='https://www.r-project.org/logo/Rlogo.svg' width='100' height='78' align='right'/>
 
-The functionality is served by several R packages
+The functionality is served by two R packages
 
 - **WRS2** — Wilcox's robust statistics for ANOVA, ANCOVA, and correlation ([WRS2 on CRAN](https://cran.r-project.org/package=WRS2))
 - **MASS** — Modern Applied Statistics with S; robust linear regression via `rlm()` ([MASS on CRAN](https://cran.r-project.org/package=MASS))
-- **boot** — Bootstrap functions for resampling inference ([boot on CRAN](https://cran.r-project.org/package=boot))
-- **car** — Companion to Applied Regression ([car on CRAN](https://cran.r-project.org/package=car))
-- **lmtest** — Testing linear regression models ([lmtest on CRAN](https://cran.r-project.org/package=lmtest))
-- **matrixStats** — Fast row/column statistics ([matrixStats on CRAN](https://cran.r-project.org/package=matrixStats))
-- **statmod** — Statistical modelling utilities ([statmod on CRAN](https://cran.r-project.org/package=statmod))
 
 
 ## References

@@ -26,8 +26,8 @@ Group
 
 	info: qsTr("Specify the robust estimation method and its parameters. All methods are based on the WRS2 package.") + "\n" +
 		"- " + qsTr("Trimmed Means: Uses a heteroscedastic ANOVA based on trimmed means (Welch-type generalization).") + "\n" +
-		"- " + qsTr("Trimmed Means + Bootstrap: A percentile t-bootstrap version of the trimmed means test.") + "\n" +
-		"- " + qsTr("Medians: A heteroscedastic ANOVA based on medians using the Harrell-Davis estimator.")
+		"- " + qsTr("Trimmed Means + Bootstrap: A percentile t-bootstrap version of the trimmed means test.") +
+		(enableMedians ? "\n- " + qsTr("Medians: A heteroscedastic ANOVA based on medians using the Harrell-Davis estimator.") : "")
 
 	DropDown
 	{
@@ -35,12 +35,16 @@ Group
 		label:	qsTr("Method")
 		id:		robustMethod
 		info:	qsTr("Select the robust estimation method to use for the analysis.")
-		values:
-		[
-			{ label: qsTr("Trimmed Means"),					value: "trimmedMeans"			},
-			{ label: qsTr("Trimmed Means + Bootstrap"),		value: "trimmedMeansBootstrap"	},
-			{ label: qsTr("Medians"),						value: "medians",				enabled: enableMedians }
-		]
+		values: enableMedians
+			? [
+				{ label: qsTr("Trimmed Means"),					value: "trimmedMeans"			},
+				{ label: qsTr("Trimmed Means + Bootstrap"),		value: "trimmedMeansBootstrap"	},
+				{ label: qsTr("Medians"),						value: "medians"				}
+			]
+			: [
+				{ label: qsTr("Trimmed Means"),					value: "trimmedMeans"			},
+				{ label: qsTr("Trimmed Means + Bootstrap"),		value: "trimmedMeansBootstrap"	}
+			]
 	}
 
 	DoubleField
