@@ -42,5 +42,5 @@ Section
 		CheckBox { name: "postHocCorrectionHolm";			label: qsTr("Holm");		info: qsTr("Also called sequential Bonferroni, and considered less conservative than the Bonferroni method.")				}
 	}
 
-	Classical.PostHocDisplay{}
+	// Classical.PostHocDisplay{}
 }

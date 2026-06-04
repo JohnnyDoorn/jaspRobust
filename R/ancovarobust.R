@@ -354,13 +354,11 @@ AncovaRobustInternal <- AncovaInternal
     postHocTable$addColumnInfo(name = "contrast_A", title = " ",                  type = "string", combine = TRUE)
     postHocTable$addColumnInfo(name = "contrast_B", title = " ",                  type = "string")
     postHocTable$addColumnInfo(name = "estimate",   title = gettext("Difference"), type = "number")
-
-    if (isTRUE(options$postHocCi)) {
-      ciLevel <- options$postHocCiLevel
-      ciTitle <- gettextf("%.0f%% CI", ciLevel * 100)
-      postHocTable$addColumnInfo(name = "ciLower", title = gettext("Lower"), type = "number", overtitle = ciTitle)
-      postHocTable$addColumnInfo(name = "ciUpper", title = gettext("Upper"), type = "number", overtitle = ciTitle)
-    }
+    
+    ciLevel <- options$postHocCiLevel
+    ciTitle <- gettextf("%.0f%% CI", ciLevel * 100)
+    postHocTable$addColumnInfo(name = "ciLower", title = gettext("Lower"), type = "number", overtitle = ciTitle)
+    postHocTable$addColumnInfo(name = "ciUpper", title = gettext("Upper"), type = "number", overtitle = ciTitle)
 
     corrections <- .ancovaRobustGetPostHocCorrections(options)
     for (corrName in names(corrections))
