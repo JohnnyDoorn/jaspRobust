@@ -55,7 +55,7 @@ Form
 
 	Classical.PostHoc
 	{
-		source: [{ name: "repeatedMeasuresFactors" }, { name: "betweenSubjectFactors" }]
+		source: [{ name: "repeatedMeasuresFactors" }]
 	}
 
 	Classical.DescriptivePlots
@@ -66,5 +66,7 @@ Form
 	Common.RainCloudPlots
 	{
 		source: ["repeatedMeasuresFactors", "betweenSubjectFactors"]
+		enableHorizontal:	false
+		enableYAxisLabel:	true
 	}
 }

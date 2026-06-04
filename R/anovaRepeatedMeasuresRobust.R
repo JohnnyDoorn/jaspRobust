@@ -569,7 +569,7 @@ AnovaRepeatedMeasuresRobustInternal <- AnovaRepeatedMeasuresInternal
 
     addLines <- !(horizontalAxis %in% unlist(options[["betweenSubjectFactors"]]))
     horiz <- if (!is.null(options$rainCloudHorizontalDisplay) && options$rainCloudHorizontalDisplay) TRUE else FALSE
-    p <- try(jaspTTests::.descriptivesPlotsRainCloudFill(plotData, depVar, horizontalAxis, depVar, horizontalAxis, addLines, horiz, NULL))
+    p <- try(jaspTTests::.descriptivesPlotsRainCloudFill(plotData, depVar, horizontalAxis, options[["rainCloudYAxisLabel"]], horizontalAxis, addLines, horiz, NULL))
     if (isTryError(p))
       plotObj$setError(.extractErrorMessage(p))
     else
