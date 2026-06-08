@@ -1,11 +1,11 @@
 Package: jaspRobust
 Type: Package
 Title: Robust Statistics Module for JASP
-Version: 0.1.0
+Version: 0.97.0
 Date: 2026-02-27
 Author: JASP Team
 Website: jasp-stats.org
-Maintainer: JASP Team <info@jasp-stats.org>
+Maintainer: Johnny van Doorn <j.b.vandoorn@uva.nl>
 Description: Robust statistical analyses including robust ANOVA, ANCOVA, repeated measures, linear regression, and correlation
 License: GPL (>= 2)
 Encoding: UTF-8

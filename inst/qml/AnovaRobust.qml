@@ -37,7 +37,7 @@ Form
 		preferredHeight: 350 * preferencesModel.uiScale
 		AvailableVariablesList	{	name:	"allVariablesList" }
 		AssignedVariablesList	{	name:	"dependent";		title: qsTr("Dependent Variable");	info: qsTr("The continuous outcome variable.");	allowedColumns: ["scale"];	singleVariable: true	}
-		AssignedVariablesList	{	name:	"fixedFactors";		title: qsTr("Fixed Factors");		info: qsTr("The categorical grouping variables.");	allowedColumns: ["nominal"];	minLevels: 2	}
+		AssignedVariablesList	{	name:	"fixedFactors";		title: qsTr("Fixed Factors");		info: qsTr("The categorical grouping variables. Trimmed means support up to three factors; medians support up to two; the bootstrap method supports a single factor (one-way) only.");	allowedColumns: ["nominal"];	minLevels: 2;	maxRows: 3	}
 	}
 
 	Common.RobustOptions

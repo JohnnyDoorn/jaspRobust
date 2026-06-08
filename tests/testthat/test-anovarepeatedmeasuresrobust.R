@@ -95,7 +95,7 @@ test_that("Robust RM ANOVA (within bootstrap) main table matches", {
 
   table <- results[["results"]][["rmRobustTable"]][["data"]]
   jaspTools::expect_equal_tables(table,
-    list("", "", "RMfactor", 3.38602565670305))
+    list("RMfactor", "", 3.38602565670305))
 })
 
 # ---- Mixed design (bwtrim) ------------------------------------------------
@@ -116,9 +116,10 @@ test_that("Robust RM ANOVA (mixed, trimmed means) main table matches", {
 
   table <- results[["results"]][["rmRobustTable"]][["data"]]
   jaspTools::expect_equal_tables(table,
-    list("facGender", 0.89459940359633, 0.0177075445379754, "RMfactor",
-         0.111628846221902, 2.28919985854055, "facGender <unicode> RMfactor",
-         0.0484029045714631, 3.21455414651095))
+    list(1, 57.9336483503635, "facGender", 0.89459940359633, 0.0177075445379754,
+         2, 51.2047538834003, "RMfactor", 0.111628846221902, 2.28919985854055,
+         2, 51.2047538834003, "facGender <unicode> RMfactor", 0.0484029045714631,
+         3.21455414651095))
 
   table <- results[["results"]][["descriptivesTable"]][["data"]]
   jaspTools::expect_equal_tables(table,
@@ -150,9 +151,7 @@ test_that("Robust RM ANOVA (mixed bootstrap) main table matches", {
 
   table <- results[["results"]][["rmRobustTable"]][["data"]]
   jaspTools::expect_equal_tables(table,
-    list("", "", "facGender", 0.939698492462312, 0.00997274507466552, "",
-         "", "RMfactor", 0.306532663316583, -0.267677592474227, -0.293653970373737,
-         -0.0678837817234042, "", "", "facGender <unicode> RMfactor",
-         0.0904522613065326, -0.591308697087234, -0.777416051522222,
-         -0.0812632082983334))
+    list("facGender", 0.939698492462312, 0.00997274507466552, "RMfactor",
+         0.306532663316583, -0.267677592474227, "facGender <unicode> RMfactor",
+         0.0904522613065326, -0.591308697087234))
 })

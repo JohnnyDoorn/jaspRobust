@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     x="0px" y="0px" viewBox="0 0 74 56" style="enable-background:new 0 0 74 56;" xml:space="preserve">
+<style type="text/css">
+	.axis { fill: #919191; }
+	.frame-shadow { opacity: 0.6; fill: #4B4B4B; enable-background: new; }
+	.frame-line { fill: #717171; }
+	.curve-trim { fill: #3771C8; fill-opacity: 0.35; }
+	.curve-main { fill: #3771C8; }
+	.trim-line { stroke: #3771C8; stroke-width: 0.9; stroke-dasharray: 2,1.4; fill: none; }
+</style>
+
+<!-- Trimmed tails (drawn first, behind solid centre) -->
+<path class="curve-trim" d="M 12,46 C 16,46 21,42 26,32 L 26,46 Z" />
+<path class="curve-trim" d="M 56,32 C 61,42 66,46 70,46 L 70,46 L 56,46 Z" />
+
+<!-- Solid (kept) centre -->
+<path class="curve-main" d="M 26,46 L 26,32 C 30,22 36,12 41,10 C 46,12 52,22 56,32 L 56,46 Z" />
+
+<!-- Trim boundary lines -->
+<line class="trim-line" x1="26" y1="46" x2="26" y2="31" />
+<line class="trim-line" x1="56" y1="46" x2="56" y2="31" />
+
+<!-- Axes -->
+<rect class="axis" x="0" y="0" width="8" height="54"/>
+<rect class="axis" x="0" y="48" width="74" height="8"/>
+
+<!-- Frame shadow / outline (standard JASP module decoration) -->
+<path class="frame-shadow" d="M0.3,0l0.6,13.7l0.5,13.7C1.7,36.6,1.8,45.8,2,54.9l-0.7-0.7c12.2,0.1,24.3,0.4,36.5,0.6L56,55.3
+	c6.1,0.2,12.2,0.4,18.2,0.7c-6.1,0.1-12.2,0.1-18.3,0.2l-18.3,0C25.6,56,13.4,56,1.3,55.7l-0.7,0l0-0.7c-0.1-9.2-0.3-18.3-0.3-27.5
+	l0-13.8L0.3,0z"/>
+<polygon class="frame-line" points="73.9,56 0.3,55.1 0.3,0 2.3,0 2.3,53.1 73.9,54 "/>
+<polygon class="frame-line" points="8.3,0 6.8,50 74.3,48 8.3,48 "/>
+</svg>

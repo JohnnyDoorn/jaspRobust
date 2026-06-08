@@ -37,9 +37,9 @@ Form
 	{
 		preferredHeight: 520 * preferencesModel.uiScale
 		AvailableVariablesList			{ name: "allVariablesList" }
-		FactorLevelList					{ name: "repeatedMeasuresFactors";	title: qsTr("Repeated Measures Factors"); info: qsTr("The within-subjects (repeated measures) variables. Here the repeated measures factors of interest and the different levels that belong to each factor can be labelled.")	; height: 180 * preferencesModel.uiScale;	factorName: qsTr("RM Factor")	}
+		FactorLevelList					{ name: "repeatedMeasuresFactors";	title: qsTr("Repeated Measures Factor"); info: qsTr("The within-subjects (repeated measures) variable. Define one factor and label its levels. Robust RM ANOVA currently supports a single within-subjects factor.")	; height: 180 * preferencesModel.uiScale;	factorName: qsTr("RM Factor")	}
 		AssignedRepeatedMeasuresCells	{ name: "repeatedMeasuresCells";	title: qsTr("Repeated Measures Cells"); info: qsTr("The separate columns in the data frame that represent the levels of the repeated measure(s) factor(s).")	;	source: "repeatedMeasuresFactors"										}
-		AssignedVariablesList			{ name: "betweenSubjectFactors";	title: qsTr("Between Subject Factors");	info: qsTr("Optional between-subjects grouping variable.")	; allowedColumns: ["nominal"]; minLevels: 2;	itemType: "fixedFactors"	}
+		AssignedVariablesList			{ name: "betweenSubjectFactors";	title: qsTr("Between Subject Factor");	info: qsTr("Optional single between-subjects grouping variable for mixed designs.")	; allowedColumns: ["nominal"]; minLevels: 2; singleVariable: true;	itemType: "fixedFactors"	}
 	}
 
 	Common.RobustOptions

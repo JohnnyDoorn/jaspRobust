@@ -4,7 +4,7 @@ import JASP.Module
 Description
 {
 	title		: qsTr("Robust Statistics")
-	icon		: "analysis-classical-anova.svg"
+	icon		: "analysis-robust.svg"
 	description	: qsTr("Robust versions of classical statistical analyses")
 	hasWrappers	: true
 	preloadData : true
@@ -12,7 +12,7 @@ Description
 	GroupTitle
 	{
 		title:  qsTr("Robust Classical Analyses");
-		icon:	"analysis-classical-anova.svg"
+		icon:	"analysis-robust.svg"
 	}
 
 	Analysis { title: qsTr("Robust ANOVA");					func:	"AnovaRobust"				}
