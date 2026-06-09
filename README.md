@@ -10,7 +10,7 @@
 
 ## Overview
 
-<img src='inst/icons/analysis-classical-anova.svg' width='149' height='173' align='right'/>
+<img src='inst/icons/analysis-robust.svg' width='149' height='173' align='right'/>
 
 **JASP Robust Statistics module** offers robust versions of classical statistical analyses for situations where standard methods are unreliable — heavy-tailed distributions, outliers, heteroscedasticity. The module covers robust **ANOVA**, **repeated-measures ANOVA**, **ANCOVA**, **linear regression**, and **correlation**, drawing on trimmed-mean and Winsorised approaches from Rand Wilcox's work alongside M-estimators from classical robust regression.
 
