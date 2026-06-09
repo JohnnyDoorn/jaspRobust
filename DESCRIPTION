@@ -2,25 +2,20 @@ Package: jaspRobust
 Type: Package
 Title: Robust Statistics Module for JASP
 Version: 0.97.0
-Date: 2026-02-27
-Author: JASP Team
+Date: 2026-06-09
+Author: Johnny van Doorn, JASP Team
 Website: jasp-stats.org
 Maintainer: Johnny van Doorn <j.b.vandoorn@uva.nl>
-Description: Robust statistical analyses including robust ANOVA, ANCOVA, repeated measures, linear regression, and correlation
+Description: Robust statistical analyses for JASP. Covers robust ANOVA, ANCOVA, and repeated measures ANOVA based on trimmed means, medians, and percentile-bootstrap methods from the WRS2 package; robust linear regression via M- and MM-estimation from MASS::rlm; and robust correlation (percentage bend, Winsorized).
 License: GPL (>= 2)
 Encoding: UTF-8
 Imports:
-  boot,
-  car,
   ggplot2,
   jaspBase,
   jaspDescriptives,
   jaspGraphs,
   jaspTTests,
-  lmtest,
   MASS,
-  matrixStats,
-  statmod,
   WRS2
 Remotes:
   jasp-stats/jaspBase,
